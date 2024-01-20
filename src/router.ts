@@ -3,6 +3,8 @@ import { z } from 'zod';
 enum InternalErrorType { ClientError, ServerError }
 type InternalError<ErrorMessage extends string> = { type: InternalErrorType, error: ErrorType<ErrorMessage>; };
 
+type Schema<T extends string> = { [key in T]: { in: any; out: any; }; };
+
 type Identity<T> = T extends object ? {} & { [P in keyof T]: T[P] } : T;
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
@@ -16,8 +18,19 @@ type ErrorType<ErrorMessage extends string> = { error: ErrorMessage, details?: s
 
 function json(body?: Object, status: 200 | 400 | 404 | 500 = 200) {
     return new Response(JSON.stringify(body), {
-        headers: { "content-type": "application/json;charset=UTF-8" },
+        headers: { "Content-Type": "application/json;charset=UTF-8", "Access-Control-Allow-Origin": "*" },
         status
+    });
+}
+
+function preflight() {
+    return new Response(undefined, {
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Authorization, Content-Type",
+            "Access-Control-Max-Age": "86400"
+        }
     });
 }
 
@@ -33,16 +46,16 @@ function defaultErrorHandler(error: any) {
     return { error: 'Unknown' };
 }
 
-export class App<Env extends object | undefined = undefined, ErrorMessage extends string = string> {
+export class App<Env extends object | undefined = undefined, ErrorMessage extends string = string, S extends Schema<keyof S extends string ? keyof S : never> = { [key in string]: { in: any; out: any; }; }> {
 
     private methods: Method<Env>[] = [];
     private zodErrorHandler: ((zodError: z.ZodError) => Object) = defaultZodErrorHandler;
     private errorHandler: ((error: any) => Object) = defaultErrorHandler;
 
-    define<ZodType extends z.ZodType, Extensions extends Extension<Env, ErrorMessage>[]>(name: string, schema: ZodType, extensions: Extensions, handler: (context: Context<z.infer<ZodType>, Env, UnionToIntersection<Exclude<Awaited<ReturnType<Extensions[number]>>, { [name: string]: undefined; }>>, ErrorMessage>) => Promise<Object | void>): void;
-    define<ZodType extends z.ZodType, Extensions extends Extension<Env, ErrorMessage>[]>(name: string, schema: ZodType, handler: (context: Context<z.infer<ZodType>, Env, {}, ErrorMessage>) => Promise<Object | void>): void;
-    define<Extensions extends Extension<Env, ErrorMessage>[]>(name: string, extensions: Extensions, handler: (context: Context<undefined, Env, UnionToIntersection<Exclude<Awaited<ReturnType<Extensions[number]>>, { [name: string]: undefined; }>>, ErrorMessage>) => Promise<Object | void>): void;
-    define<Extensions extends Extension<Env, ErrorMessage>[]>(name: string, handler: (context: Context<undefined, Env, UnionToIntersection<Exclude<Awaited<ReturnType<Extensions[number]>>, { [name: string]: undefined; }>>, ErrorMessage>) => Promise<Object | void>): void;
+    define<Name extends keyof S, ZodType extends z.ZodType & { _output: S[Name]['in']; }, Extensions extends Extension<Env, ErrorMessage>[]>(name: Name, schema: ZodType, extensions: Extensions, handler: (context: Context<z.infer<ZodType>, Env, UnionToIntersection<Exclude<Awaited<ReturnType<Extensions[number]>>, { [name: string]: undefined; }>>, ErrorMessage>) => Promise<S[Name]['out']>): void;
+    define<Name extends keyof S, ZodType extends z.ZodType & { _output: S[Name]['in']; }, Extensions extends Extension<Env, ErrorMessage>[]>(name: Name, schema: ZodType, handler: (context: Context<z.infer<ZodType>, Env, {}, ErrorMessage>) => Promise<S[Name]['out']>): void;
+    define<Name extends keyof S, Extensions extends Extension<Env, ErrorMessage>[]>(name: Name, extensions: Extensions, handler: ({ in: undefined; } & S[Name])['in'] extends undefined ? (context: Context<undefined, Env, UnionToIntersection<Exclude<Awaited<ReturnType<Extensions[number]>>, { [name: string]: undefined; }>>, ErrorMessage>) => Promise<S[Name]['out']> : never): void;
+    define<Name extends keyof S, Extensions extends Extension<Env, ErrorMessage>[]>(name: Name, handler: ({ in: undefined; } & S[Name])['in'] extends undefined ? (context: Context<undefined, Env, UnionToIntersection<Exclude<Awaited<ReturnType<Extensions[number]>>, { [name: string]: undefined; }>>, ErrorMessage>) => Promise<S[Name]['out']> : never): void;
     define(...args: any[]) {
         switch (args.length) {
             case 4:
@@ -78,6 +91,7 @@ export class App<Env extends object | undefined = undefined, ErrorMessage extend
     async fetch(request: Request, env: Env): Promise<Response> {
         try {
             const pathname = new URL(request.url).pathname.substring(1);
+            if (request.method === 'OPTIONS') return preflight();
             if (request.method !== 'POST') { return json({}, 404); }
             const method = this.methods.find(method => method.name === pathname);
             if (!method) { return json(undefined, 404); }

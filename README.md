@@ -12,6 +12,11 @@ Developing safe APIs can be complicated. While it seems easy to get started with
 
 safe-router is an opinionated framework. All requests are done with POST. All parameters are sent in the request body, and are validated automatically using Zod. A handler receives an object and returns an object. Any other interactions with the raw request are done in separate extensions to keep things tidy. The result is minimal code with maximum safety and simplicity.
 
+## Installation
+```
+npm install @c-wiren/safe-router zod
+```
+
 ## Examples
 
 Define a function:
