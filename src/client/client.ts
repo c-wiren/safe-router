@@ -1,6 +1,8 @@
+import { input, ZodType } from 'zod';
+
 type Schema<T extends string> = { [key in T]: { in: any; out: any; }; };
 type Result<T> = { ok: true, value: T; } | { ok: false, error: { error: string; type: 'Client' | 'Server'; }; };
-type Client<S extends Schema<keyof S extends string ? keyof S : never>> = <T extends keyof S>(name: T, params: S[T]['in'], settings?: Omit<RequestInit, 'body' | 'method'>) => Promise<Result<S[T]['out']>>;
+type Client<S extends Schema<keyof S extends string ? keyof S : never>> = <T extends keyof S>(name: T, params: S[T]['in'] extends ZodType ? input<S[T]['in']> : S[T]['in'], settings?: Omit<RequestInit, 'body' | 'method'>) => Promise<Result<S[T]['out']>>;
 
 export function Client<S extends Schema<keyof S extends string ? keyof S : never>>(baseUrl: string): Client<S> {
     baseUrl += '/';
