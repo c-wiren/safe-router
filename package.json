@@ -1,6 +1,7 @@
 {
   "name": "@c-wiren/safe-router",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "type": "module",
   "description": "Simple and safe web framework for Cloudflare Workers with built in validation using Zod",
   "main": "dist/index.js",
   "scripts": {

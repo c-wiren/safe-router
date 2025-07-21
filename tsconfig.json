@@ -1,50 +1,40 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": "src",
-    "declaration": true,
-    "sourceMap": true,
-    "esModuleInterop": true,
-    "inlineSourceMap": false,
-    "lib": [
-      "esnext",
-      "dom",
-      "dom.iterable"
-    ],
-    "listEmittedFiles": false,
-    "listFiles": false,
-    "moduleResolution": "nodeNext",
-    "noFallthroughCasesInSwitch": true,
-    "pretty": true,
-    "resolveJsonModule": true,
-    "rootDir": "src",
+    /* Modules and Target */
+    "target": "ES2022",                                // Modern output; supports top-level await
+    "module": "ES2022",                                // ESM output
+    "moduleResolution": "node",                        // Node-style resolution
+    "outDir": "dist",                                  // Output directory
+    "rootDir": "src",                                  // Input source directory
+    "types": [],                                       // Avoid including DOM/lib types
+
+    /* Declarations */
+    "declaration": true,                               // Emit .d.ts files
+    "declarationMap": true,                            // Source map for types
+
+    /* ESM-Friendly Output */
+    "esModuleInterop": true,                           // Allows default imports from CommonJS
+    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "strict": true,
-    "traceResolution": false,
-    "outDir": "./dist",
-    "target": "esnext",
-    "module": "esnext",
+
+    /* Strictness */
+    "strict": true,                                    // All strict type-checking options
     "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Source Maps */
+    "sourceMap": true,                                 // Generate .map files
+
+    /* ESM Compatibility */
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+
+    /* Emit Options */
+    "emitDeclarationOnly": false,                      // Emit both .js and .d.ts
+    "noEmit": false
   },
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
-  "include": [
-    "src"
-  ]
+  "include": ["src"],
+  "exclude": ["dist", "node_modules", "test"]
 }

@@ -1,3 +1,3 @@
-import { App } from './router';
+import { App } from './router.js';
 
 export default App;
